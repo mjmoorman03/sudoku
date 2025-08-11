@@ -3,7 +3,10 @@
 import { useState, useEffect } from "react";
 import SudokuGrid from "./sudokuGrid";
 import Button from "./button";
-
+import ZoomButton from "./zoomButton";
+import easyPuzzles from '../data/easyPuzzles.json';
+import mediumPuzzles from '../data/mediumPuzzles.json';
+import hardPuzzles from '../data/hardPuzzles.json';
 
 const initialGrid = [
     ['', '', '', '', '', '', '', '', ''],
@@ -21,8 +24,10 @@ const initialGrid = [
 export default function SudokuInterface() {
     const [checkStatus, setCheckStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
     const [grid, setGrid] = useState(initialGrid);
+    const [defaultGrid, setDefaultGrid] = useState(initialGrid)
     const [visible, setVisible] = useState(false);
     const [focusedCell, setFocusedCell] = useState<[number, number] | null>(null);
+    const [zoomLevel, setZoomLevel] = useState(1.0);
 
     useEffect(() => {
         if (checkStatus === 'unchecked') {
@@ -40,6 +45,14 @@ export default function SudokuInterface() {
             i === row ? r.map((v, j) => (j === col ? value : v)) : r
         ));
         setGrid(newGrid);
+    }
+
+    function handleZoomIn() {
+        setZoomLevel((zl) => Math.min(3.0, zl + 0.1));
+    }
+
+    function handleZoomOut() {
+        setZoomLevel((zl) => Math.max(0.5, zl - 0.1));
     }
 
     function handleArrowKey(row: number, col: number, direction: string) {
@@ -112,6 +125,30 @@ export default function SudokuInterface() {
         setCheckStatus('valid');
     }
 
+    function handleNewPuzzle(e: React.MouseEvent<HTMLButtonElement>) {
+        const difficulty = e.currentTarget?.textContent?.toLowerCase();
+        const puzzles = 
+            difficulty === 'easy' ? easyPuzzles :
+            difficulty === 'medium' ? mediumPuzzles :
+            difficulty === 'hard' ? hardPuzzles :
+            easyPuzzles;
+        const randomPuzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+        // convert to 2D array
+        const newGrid : string[][] = [];
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                const val = randomPuzzle['puzzle'][i * 9 + j];
+                if (newGrid[i] === undefined) {
+                    newGrid[i] = [];
+                }
+                newGrid[i][j] = val === '0' ? '' : val;
+            }
+        }
+        setDefaultGrid(newGrid);
+        setGrid(newGrid);
+        setCheckStatus('unchecked');
+    }
+
     return (
         <>
         {checkStatus !== 'unchecked' && 
@@ -119,13 +156,29 @@ export default function SudokuInterface() {
                 {checkStatus === 'invalid' ? 'There are errors in your solution.' : 'Congratulations! You solved the puzzle!'}
             </h3>}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <SudokuGrid 
-                grid={grid} 
-                handleCellChange={handleCellChange} 
-                handleArrowKey={handleArrowKey}
-                handleCellFocus={handleCellFocus}
-                focusedCell={focusedCell}
-            />
+            <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", width: "100%" }}>
+                <Button label="Easy" onClick={handleNewPuzzle} />
+                <Button label="Medium" onClick={handleNewPuzzle} />
+                <Button label="Hard" onClick={handleNewPuzzle} />
+            </div>
+            <div style={{display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', width: '100%', transform: `translateX(-${17}px)`}}>
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                    <ZoomButton label="+" onClick={handleZoomIn} />
+                    <ZoomButton label="-" onClick={handleZoomOut} />
+                </div>
+                <div style={{ justifySelf: 'center' }}>
+                    <SudokuGrid 
+                        grid={grid} 
+                        defaultGrid={defaultGrid}
+                        handleCellChange={handleCellChange} 
+                        handleArrowKey={handleArrowKey}
+                        handleCellFocus={handleCellFocus}
+                        focusedCell={focusedCell}
+                        zoomLevel={zoomLevel}
+                    />
+                </div>
+                <div />
+            </div>
             <Button label="Check Solution" onClick={handleCheckGrid} />
         </div>
         </>

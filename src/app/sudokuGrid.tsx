@@ -4,16 +4,20 @@ import { JSX } from 'react';
 
 export default function SudokuGrid({ 
     grid, 
+    defaultGrid,
     handleCellChange, 
     handleArrowKey, 
     handleCellFocus, 
-    focusedCell 
+    focusedCell, 
+    zoomLevel
 } : { 
     grid: string[][], 
+    defaultGrid: string[][],
     handleCellChange: (row: number, col: number, value: string) => void,
     handleArrowKey: (row: number, col: number, direction: string) => void,
     handleCellFocus: (row: number, col: number) => void,
-    focusedCell: [number, number] | null
+    focusedCell: [number, number] | null,
+    zoomLevel: number
 }) {
 
     const boxes: JSX.Element[] = [];
@@ -27,7 +31,9 @@ export default function SudokuGrid({
                     handleArrowKey={handleArrowKey}
                     handleCellFocus={handleCellFocus}
                     focusedCell={focusedCell}
-                    grid={grid} 
+                    grid={grid}
+                    defaultGrid={defaultGrid}
+                    zoomLevel={zoomLevel}
                 />
             );
         }
@@ -43,6 +49,6 @@ export default function SudokuGrid({
 }
 
 const sudokuGridStyle: React.CSSProperties = {
-    border: '3px solid #999',
+    border: '3px solid #000000',
     borderRadius: '11px'
 };

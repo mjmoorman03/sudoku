@@ -7,14 +7,18 @@ export default function SudokuBox({
     handleArrowKey, 
     handleCellFocus, 
     focusedCell, 
-    grid 
+    grid,
+    defaultGrid,
+    zoomLevel
 }: { 
     pos: [number, number], 
     handleCellChange: (row: number, col: number, value: string) => void, 
     handleArrowKey: (row: number, col: number, direction: string) => void,
     handleCellFocus: (row: number, col: number) => void,
     focusedCell: [number, number] | null,
-    grid: string[][] 
+    grid: string[][],
+    defaultGrid: string[][],
+    zoomLevel: number
 }) {
 
     const cells = [];
@@ -22,14 +26,17 @@ export default function SudokuBox({
         for (let j = 0; j < 3; j++) {
             const row = 3 * pos[0] + i;
             const col = 3 * pos[1] + j;
+            const defaultVal = defaultGrid[row][col] !== '';
             cells.push(
                 <SudokuCell
+                    zoomLevel={zoomLevel}
                     key={`${i},${j}`}
                     pos={[row, col]}
                     handleCellChange={handleCellChange}
                     handleArrowKey={handleArrowKey}
                     handleCellFocus={handleCellFocus}
                     focusedCell={focusedCell}
+                    defaultVal={defaultVal}
                     value={grid[row][col]}
                 />
             );
@@ -44,6 +51,6 @@ export default function SudokuBox({
 }
 
 const sudokuCellStyle: React.CSSProperties = {
-    border: '2px solid #999'
+    border: '2px solid #000000'
 };
 
