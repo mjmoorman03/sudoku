@@ -5,6 +5,7 @@ import { JSX } from 'react';
 export default function SudokuGrid({ 
     grid, 
     defaultGrid,
+    colorGrid,
     handleCellChange, 
     handleArrowKey, 
     handleCellFocus, 
@@ -13,6 +14,7 @@ export default function SudokuGrid({
 } : { 
     grid: string[][], 
     defaultGrid: string[][],
+    colorGrid: string[][],
     handleCellChange: (row: number, col: number, value: string) => void,
     handleArrowKey: (row: number, col: number, direction: string) => void,
     handleCellFocus: (row: number, col: number) => void,
@@ -33,6 +35,7 @@ export default function SudokuGrid({
                     focusedCell={focusedCell}
                     grid={grid}
                     defaultGrid={defaultGrid}
+                    colorGrid={colorGrid}
                     zoomLevel={zoomLevel}
                 />
             );

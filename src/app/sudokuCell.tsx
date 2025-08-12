@@ -9,6 +9,7 @@ export default function SudokuCell({
     handleCellFocus, 
     focusedCell, 
     defaultVal,
+    colorValue,
     value,  
 }: { 
     zoomLevel: number,
@@ -18,10 +19,11 @@ export default function SudokuCell({
     handleCellFocus: (row: number, col: number) => void,
     focusedCell: [number, number] | null,
     value: string,
+    colorValue: string,
     defaultVal: boolean
 }) {
     const [focus, setFocus] = useState(false);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const cellRef = useRef<HTMLDivElement>(null);
 
     const cellStyleInactive: React.CSSProperties = {
         width: `${40 * zoomLevel}px`,
@@ -32,19 +34,21 @@ export default function SudokuCell({
         borderRadius: '2px',
         outline: 'none',
         color: 'black',
-        backgroundColor: 'white',
-        caretColor: 'transparent',
+        backgroundColor: colorValue !== '' ? colorValue : 'white',
         cursor: 'pointer',
         lineHeight: `${40 * zoomLevel}px`,
         padding: 0,
         margin: 0,
         boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        userSelect: 'none',
         };
-
 
     const cellStyleActive: React.CSSProperties = {
         ...cellStyleInactive,
-        backgroundColor: '#d6d6d6ff'
+        boxShadow: "inset 0 0 0 5px cornflowerblue",
     };
 
     const cellStyleActiveDefault: React.CSSProperties = {
@@ -59,8 +63,8 @@ export default function SudokuCell({
 
     // Focus this cell when it becomes the focused cell
     useEffect(() => {
-        if (focusedCell && focusedCell[0] === pos[0] && focusedCell[1] === pos[1] && inputRef.current) {
-            inputRef.current.focus();
+        if (focusedCell && focusedCell[0] === pos[0] && focusedCell[1] === pos[1] && cellRef.current) {
+            cellRef.current.focus();
         }
     }, [focusedCell, pos]);
 
@@ -73,7 +77,7 @@ export default function SudokuCell({
         setFocus(false);
     }
 
-    function handleChange(e: React.KeyboardEvent<HTMLInputElement>) {
+    function handleChange(e: React.KeyboardEvent<HTMLDivElement>) {
         const key = e.key;
         
         // Handle arrow keys
@@ -82,7 +86,7 @@ export default function SudokuCell({
             handleArrowKey(pos[0], pos[1], key);
             return;
         }
-        
+
         if (defaultVal) {
             return;
         }
@@ -102,16 +106,17 @@ export default function SudokuCell({
     }
 
     return (
-        <input 
-        ref={inputRef}
+        <div 
+        ref={cellRef}
         style={
             focus ? (defaultVal ? cellStyleActiveDefault : cellStyleActive) : (defaultVal ? cellStyleInactiveDefault : cellStyleInactive)
         }
-        type='text' 
+        tabIndex={0}
         onKeyDown={handleChange}
         onFocus={handleFocus}
         onBlur={handleBlur}
-        onChange={() => {}}
-        value={value} />
+        >
+            {value}
+        </div>
     )
 }

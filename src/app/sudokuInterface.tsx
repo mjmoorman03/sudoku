@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import SudokuGrid from "./sudokuGrid";
 import Button from "./button";
 import ZoomButton from "./zoomButton";
+import Controls from "./controls";
 import easyPuzzles from '../data/easyPuzzles.json';
 import mediumPuzzles from '../data/mediumPuzzles.json';
 import hardPuzzles from '../data/hardPuzzles.json';
+
 
 const initialGrid = [
     ['', '', '', '', '', '', '', '', ''],
@@ -25,9 +27,12 @@ export default function SudokuInterface() {
     const [checkStatus, setCheckStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
     const [grid, setGrid] = useState(initialGrid);
     const [defaultGrid, setDefaultGrid] = useState(initialGrid)
+    const [gridColor, setGridColor] = useState(initialGrid);
     const [visible, setVisible] = useState(false);
     const [focusedCell, setFocusedCell] = useState<[number, number] | null>(null);
     const [zoomLevel, setZoomLevel] = useState(1.0);
+    const [panelStatus, setPanelStatus] = useState<'annotations' | 'ordinary' | 'colors'>('ordinary');
+
 
     useEffect(() => {
         if (checkStatus === 'unchecked') {
@@ -41,6 +46,33 @@ export default function SudokuInterface() {
     }, [checkStatus]);
 
     function handleCellChange(row: number, col: number, value: string) {
+        // set new color grid value
+        if (panelStatus === 'colors' && ['Khaki', 'DarkSeaGreen', 'LightSkyBlue', 'PeachPuff', 'Plum', 'LightGreen', 'LightSalmon', 'LightSteelBlue', 'LightCoral'].includes(value)) {
+            setGridColor((prevGrid) => {
+                const newColorGird = prevGrid.map((r, i) => {
+                    if (i === row) {
+                        return r.map((v, j) => {
+                            if (j === col) {
+                                if (v === value) {
+                                    return ''; // toggle off
+                                }
+                                return value; // set to new color
+                            } else {
+                                return v;
+                            }
+                        });
+                    } else {
+                        return r; 
+                    }
+                });
+                return newColorGird;
+            });
+            return;
+        }
+        if (defaultGrid[row][col] !== '') {
+            // don't allow changes to default grid cells
+            return;
+        }
         const newGrid = grid.map((r, i) => (
             i === row ? r.map((v, j) => (j === col ? value : v)) : r
         ));
@@ -150,38 +182,40 @@ export default function SudokuInterface() {
     }
 
     return (
-        <>
-        {checkStatus !== 'unchecked' && 
+        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+            {checkStatus !== 'unchecked' && 
             <h3 style={checkStatus === 'valid' ? {...statusValidStyle, opacity: visible ? 1 : 0} : {...statusInvalidStyle, opacity: visible ? 1 : 0}}>
                 {checkStatus === 'invalid' ? 'There are errors in your solution.' : 'Congratulations! You solved the puzzle!'}
             </h3>}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", width: "100%" }}>
-                <Button label="Easy" onClick={handleNewPuzzle} />
-                <Button label="Medium" onClick={handleNewPuzzle} />
-                <Button label="Hard" onClick={handleNewPuzzle} />
-            </div>
-            <div style={{display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', width: '100%', transform: `translateX(-${17}px)`}}>
-                <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                    <ZoomButton label="+" onClick={handleZoomIn} />
-                    <ZoomButton label="-" onClick={handleZoomOut} />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", width: "100%" }}>
+                    <Button label="Easy" onClick={handleNewPuzzle} />
+                    <Button label="Medium" onClick={handleNewPuzzle} />
+                    <Button label="Hard" onClick={handleNewPuzzle} />
                 </div>
-                <div style={{ justifySelf: 'center' }}>
-                    <SudokuGrid 
-                        grid={grid} 
-                        defaultGrid={defaultGrid}
-                        handleCellChange={handleCellChange} 
-                        handleArrowKey={handleArrowKey}
-                        handleCellFocus={handleCellFocus}
-                        focusedCell={focusedCell}
-                        zoomLevel={zoomLevel}
-                    />
+                <div style={{display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', width: '100%', transform: `translateX(-${17}px)`}}>
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                        <ZoomButton label="+" onClick={handleZoomIn} />
+                        <ZoomButton label="-" onClick={handleZoomOut} />
+                    </div>
+                    <div style={{ justifySelf: 'center' }}>
+                        <SudokuGrid 
+                            grid={grid} 
+                            defaultGrid={defaultGrid}
+                            colorGrid={gridColor}
+                            handleCellChange={handleCellChange} 
+                            handleArrowKey={handleArrowKey}
+                            handleCellFocus={handleCellFocus}
+                            focusedCell={focusedCell}
+                            zoomLevel={zoomLevel}
+                        />
+                    </div>
+                    <div />
                 </div>
-                <div />
+                <Button label="Check Solution" onClick={handleCheckGrid} />
             </div>
-            <Button label="Check Solution" onClick={handleCheckGrid} />
+            <Controls focusedCell={focusedCell} handleCellChange={handleCellChange} panelStatus={panelStatus} changePanel={setPanelStatus}/>
         </div>
-        </>
     )
 }
 

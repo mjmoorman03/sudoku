@@ -5,7 +5,7 @@ export default function ZoomButton({ label, onClick }: { label: string; onClick:
     padding: '5px',
     fontSize: '16px',
     color: 'white',
-    backgroundColor: 'black',
+    backgroundColor: '#292929ff',
     borderRadius: '5px',
     cursor: 'pointer',
     margin: '5px',

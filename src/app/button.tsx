@@ -1,8 +1,8 @@
 
 
-export default function Button({ label, onClick }: { label: string; onClick: () => void }) {
+export default function Button({ label, onClick, style=buttonStyle }: { label: string; onClick:(e: React.MouseEvent<HTMLButtonElement>) => void, style?: React.CSSProperties }) {
     return (
-        <button style={buttonStyle} onClick={onClick}>
+        <button style={style} onClick={onClick}>
             {label}
         </button>
     );

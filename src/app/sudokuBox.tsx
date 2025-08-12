@@ -9,6 +9,7 @@ export default function SudokuBox({
     focusedCell, 
     grid,
     defaultGrid,
+    colorGrid,
     zoomLevel
 }: { 
     pos: [number, number], 
@@ -18,6 +19,7 @@ export default function SudokuBox({
     focusedCell: [number, number] | null,
     grid: string[][],
     defaultGrid: string[][],
+    colorGrid: string[][],
     zoomLevel: number
 }) {
 
@@ -37,6 +39,7 @@ export default function SudokuBox({
                     handleCellFocus={handleCellFocus}
                     focusedCell={focusedCell}
                     defaultVal={defaultVal}
+                    colorValue={colorGrid[row][col]}
                     value={grid[row][col]}
                 />
             );

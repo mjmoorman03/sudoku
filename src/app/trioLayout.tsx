@@ -5,7 +5,7 @@ export default function TrioLayout({ children }: { children: React.ReactNode[] }
 
     return (
         <div className={trioLayoutClass}>
-            {children.map((child : any, index : number) => (
+            {children.map((child : React.ReactNode, index : number) => (
                 <div key={index} className="flex items-center justify-center">
                     {child}
                 </div>
