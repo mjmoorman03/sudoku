@@ -1,20 +1,17 @@
 import SudokuBox from './sudokuBox';
 import TrioLayout from './trioLayout';
 import { JSX } from 'react';
+import { GridObject } from "./interfaces";
 
 export default function SudokuGrid({ 
-    grid, 
-    defaultGrid,
-    colorGrid,
+    gridObj, 
     handleCellChange, 
     handleArrowKey, 
     handleCellFocus, 
     focusedCell, 
     zoomLevel
 } : { 
-    grid: string[][], 
-    defaultGrid: string[][],
-    colorGrid: string[][],
+    gridObj: GridObject,
     handleCellChange: (row: number, col: number, value: string) => void,
     handleArrowKey: (row: number, col: number, direction: string) => void,
     handleCellFocus: (row: number, col: number) => void,
@@ -33,9 +30,7 @@ export default function SudokuGrid({
                     handleArrowKey={handleArrowKey}
                     handleCellFocus={handleCellFocus}
                     focusedCell={focusedCell}
-                    grid={grid}
-                    defaultGrid={defaultGrid}
-                    colorGrid={colorGrid}
+                    gridObj={gridObj}
                     zoomLevel={zoomLevel}
                 />
             );

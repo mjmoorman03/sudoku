@@ -8,6 +8,7 @@ import Controls from "./controls";
 import easyPuzzles from '../data/easyPuzzles.json';
 import mediumPuzzles from '../data/mediumPuzzles.json';
 import hardPuzzles from '../data/hardPuzzles.json';
+import { GridObject } from "./interfaces";
 
 
 const initialGrid = [
@@ -22,16 +23,27 @@ const initialGrid = [
     ['', '', '', '', '', '', '', '', '']
 ];
 
+const annotationsGrid : string[][][]= [
+    [[], [], [], [], [], [], [], [], []],
+    [[], [], [], [], [], [], [], [], []],
+    [[], [], [], [], [], [], [], [], []],
+    [[], [], [], [], [], [], [], [], []],
+    [[], [], [], [], [], [], [], [], []],
+    [[], [], [], [], [], [], [], [], []],
+    [[], [], [], [], [], [], [], [], []],
+    [[], [], [], [], [], [], [], [], []],
+    [[], [], [], [], [], [], [], [], []]
+]
+
 
 export default function SudokuInterface() {
     const [checkStatus, setCheckStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
-    const [grid, setGrid] = useState(initialGrid);
-    const [defaultGrid, setDefaultGrid] = useState(initialGrid)
-    const [gridColor, setGridColor] = useState(initialGrid);
     const [visible, setVisible] = useState(false);
     const [focusedCell, setFocusedCell] = useState<[number, number] | null>(null);
     const [zoomLevel, setZoomLevel] = useState(1.0);
     const [panelStatus, setPanelStatus] = useState<'annotations' | 'ordinary' | 'colors'>('ordinary');
+    // TODO: Add annotations
+    const [gridObj, setGridObj] = useState<GridObject>({'grid': initialGrid, 'default': initialGrid, 'color': initialGrid, 'annotations': annotationsGrid});
 
 
     useEffect(() => {
@@ -48,10 +60,10 @@ export default function SudokuInterface() {
     function handleCellChange(row: number, col: number, value: string) {
         // set new color grid value
         if (panelStatus === 'colors' && ['Khaki', 'DarkSeaGreen', 'LightSkyBlue', 'PeachPuff', 'Plum', 'LightGreen', 'LightSalmon', 'LightSteelBlue', 'LightCoral'].includes(value)) {
-            setGridColor((prevGrid) => {
-                const newColorGird = prevGrid.map((r, i) => {
+            setGridObj((prevGrid: GridObject) => {
+                const newColorGird = prevGrid.color.map((r: string[], i: number) => {
                     if (i === row) {
-                        return r.map((v, j) => {
+                        return r.map((v: string, j: number) => {
                             if (j === col) {
                                 if (v === value) {
                                     return ''; // toggle off
@@ -65,18 +77,59 @@ export default function SudokuInterface() {
                         return r; 
                     }
                 });
-                return newColorGird;
+                return {...gridObj, 'color' : newColorGird};
             });
             return;
         }
-        if (defaultGrid[row][col] !== '') {
+        if (gridObj.default[row][col] !== '') {
             // don't allow changes to default grid cells
             return;
         }
-        const newGrid = grid.map((r, i) => (
+        if (panelStatus === 'annotations') {
+            if (value === '' && gridObj.annotations[row][col].length === 0) {
+                setGridObj((prevGrid: GridObject) => {
+                    const newGrid = prevGrid.grid.map((r: string[], i: number) => (
+                        i === row ? r.map((v, j) => (j === col ? '' : v)) : r
+                    ));
+                    return {...gridObj, 'grid': newGrid};
+                });
+                return;
+            }
+            if (gridObj.grid[row][col] !== '') {
+                return;
+            }
+            // toggle annotation
+            setGridObj((prevGrid: GridObject) => {
+                const newAnnotations = prevGrid.annotations.map((r: string[][], i: number) => {
+                    if (i === row) {
+                        return r.map((v, j) => {
+                            if (j === col) {
+                                if (v.includes(value)) {
+                                    return v.filter((ann) => ann !== value); // remove annotation
+                                } else {
+                                    return [...v, value]; // add annotation
+                                }
+                            } else {
+                                return v;
+                            }
+                        });
+                    } else {
+                        return r; 
+                    }
+                });
+                return {...gridObj, 'annotations' : newAnnotations};
+            });
+            return;
+        }
+        // if grid value put in, clear annotations of that cell
+        const newGrid = gridObj.grid.map((r: string[], i: number) => (
             i === row ? r.map((v, j) => (j === col ? value : v)) : r
         ));
-        setGrid(newGrid);
+        // clear annotations for that cell
+        const newAnnotations = gridObj.annotations.map((r: string[][], i: number) => (
+            i === row ? r.map((v, j) => (j === col ? [] : v)) : r
+        ));
+        setGridObj({...gridObj, 'grid': newGrid, 'annotations': newAnnotations});
     }
 
     function handleZoomIn() {
@@ -118,7 +171,7 @@ export default function SudokuInterface() {
         for (let i = 0; i < 9; i++) {
             const seen = new Set<string>();
             for (let j = 0; j < 9; j++) {
-                const val = grid[i][j];
+                const val = gridObj.grid[i][j];
                 if (val === '' || seen.has(val)) {
                     setCheckStatus('invalid');
                     return;
@@ -130,7 +183,7 @@ export default function SudokuInterface() {
         for (let j = 0; j < 9; j++) {
             const seen = new Set<string>();
             for (let i = 0; i < 9; i++) {
-                const val = grid[i][j];
+                const val = gridObj.grid[i][j];
                 if (val === '' || seen.has(val)) {
                     setCheckStatus('invalid');
                     return;
@@ -144,7 +197,7 @@ export default function SudokuInterface() {
                 const seen = new Set<string>();
                 for (let i = 0; i < 3; i++) {
                     for (let j = 0; j < 3; j++) {
-                        const val = grid[3 * boxRow + i][3 * boxCol + j];
+                        const val = gridObj.grid[3 * boxRow + i][3 * boxCol + j];
                         if (val === '' || seen.has(val)) {
                             setCheckStatus('invalid');
                             return;
@@ -176,8 +229,7 @@ export default function SudokuInterface() {
                 newGrid[i][j] = val === '0' ? '' : val;
             }
         }
-        setDefaultGrid(newGrid);
-        setGrid(newGrid);
+        setGridObj({'grid': newGrid, 'default': newGrid, 'color': initialGrid, 'annotations': annotationsGrid});
         setCheckStatus('unchecked');
     }
 
@@ -200,9 +252,7 @@ export default function SudokuInterface() {
                     </div>
                     <div style={{ justifySelf: 'center' }}>
                         <SudokuGrid 
-                            grid={grid} 
-                            defaultGrid={defaultGrid}
-                            colorGrid={gridColor}
+                            gridObj={gridObj} 
                             handleCellChange={handleCellChange} 
                             handleArrowKey={handleArrowKey}
                             handleCellFocus={handleCellFocus}

@@ -10,6 +10,7 @@ export default function SudokuCell({
     focusedCell, 
     defaultVal,
     colorValue,
+    annotations,
     value,  
 }: { 
     zoomLevel: number,
@@ -20,10 +21,27 @@ export default function SudokuCell({
     focusedCell: [number, number] | null,
     value: string,
     colorValue: string,
+    annotations: string[],
     defaultVal: boolean
 }) {
     const [focus, setFocus] = useState(false);
     const cellRef = useRef<HTMLDivElement>(null);
+
+    const annotationsStyle: React.CSSProperties = {
+        height: `${40 * zoomLevel}px`,
+        width: `${40 * zoomLevel - 1}px`,
+        display: 'grid',
+        marginTop: `${6 * zoomLevel}px`,
+        marginBottom: `${7 * zoomLevel}px`,
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateRows: 'repeat(3, 1fr)',
+        gap: '1px',
+        pointerEvents: 'none',
+        lineHeight: '0px',
+        fontSize: `${10 * zoomLevel}px`,
+        color: 'gray',
+        userSelect: 'none',
+    };
 
     const cellStyleInactive: React.CSSProperties = {
         width: `${40 * zoomLevel}px`,
@@ -40,15 +58,12 @@ export default function SudokuCell({
         padding: 0,
         margin: 0,
         boxSizing: 'border-box',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         userSelect: 'none',
         };
 
     const cellStyleActive: React.CSSProperties = {
         ...cellStyleInactive,
-        boxShadow: "inset 0 0 0 5px cornflowerblue",
+        boxShadow: "inset 0 0 0 3px cornflowerblue",
     };
 
     const cellStyleActiveDefault: React.CSSProperties = {
@@ -116,6 +131,13 @@ export default function SudokuCell({
         onFocus={handleFocus}
         onBlur={handleBlur}
         >
+            {annotations.length > 0 && value === '' &&
+                <div style={annotationsStyle}>
+                    {annotations.map((annotation, index) => (
+                        <span key={index}>{annotation}</span>
+                    ))}
+                </div>
+            }
             {value}
         </div>
     )

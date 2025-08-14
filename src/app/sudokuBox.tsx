@@ -1,5 +1,6 @@
 import SudokuCell from './sudokuCell'
 import TrioLayout from './trioLayout'
+import { GridObject } from './interfaces';
 
 export default function SudokuBox({ 
     pos, 
@@ -7,9 +8,7 @@ export default function SudokuBox({
     handleArrowKey, 
     handleCellFocus, 
     focusedCell, 
-    grid,
-    defaultGrid,
-    colorGrid,
+    gridObj,
     zoomLevel
 }: { 
     pos: [number, number], 
@@ -17,9 +16,7 @@ export default function SudokuBox({
     handleArrowKey: (row: number, col: number, direction: string) => void,
     handleCellFocus: (row: number, col: number) => void,
     focusedCell: [number, number] | null,
-    grid: string[][],
-    defaultGrid: string[][],
-    colorGrid: string[][],
+    gridObj: GridObject,
     zoomLevel: number
 }) {
 
@@ -28,7 +25,7 @@ export default function SudokuBox({
         for (let j = 0; j < 3; j++) {
             const row = 3 * pos[0] + i;
             const col = 3 * pos[1] + j;
-            const defaultVal = defaultGrid[row][col] !== '';
+            const defaultVal = gridObj.default[row][col] !== '';
             cells.push(
                 <SudokuCell
                     zoomLevel={zoomLevel}
@@ -39,8 +36,9 @@ export default function SudokuBox({
                     handleCellFocus={handleCellFocus}
                     focusedCell={focusedCell}
                     defaultVal={defaultVal}
-                    colorValue={colorGrid[row][col]}
-                    value={grid[row][col]}
+                    colorValue={gridObj.color[row][col]}
+                    annotations={gridObj.annotations[row][col]}
+                    value={gridObj.grid[row][col]}
                 />
             );
         }
