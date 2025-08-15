@@ -34,7 +34,7 @@ export default function Controls({ focusedCell, handleCellChange, panelStatus, c
     ));
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'white', border: '2px solid #000000ff', borderRadius: '12px', padding: '5px', margin: '30px'}}>
+        <div className='sm:mx-4' style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'white', border: '2px solid #000000ff', borderRadius: '12px', padding: '5px'}}>
             <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
                 <Button label={String.fromCharCode(0x2151)} onClick={() => changePanel('annotations')} style={panelStatus === 'annotations' ? activeControlButtonStyle : controlButtonStyle} />
                 <Button label='1' onClick={() => changePanel('ordinary')} style={panelStatus === 'ordinary' ? activeControlButtonStyle : controlButtonStyle} />
@@ -44,10 +44,10 @@ export default function Controls({ focusedCell, handleCellChange, panelStatus, c
                 <TrioLayout>
                     {panelStatus === 'annotations' ? numberButtons : panelStatus === 'ordinary' ? numberButtons : colorButtons}
                 </TrioLayout>
-                <div style={{ display: 'flex', alignItems: 'center', marginLeft: '10px' }}>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', marginTop: '10px' }}>
                     <Button label={`\u232B`} onClick={() => (focusedCell) ? handleCellChange(focusedCell[0], focusedCell[1], '') : null} style={delButtonStyle}/>
                 </div>
-            </div>
         </div>
     )
 }
@@ -101,7 +101,8 @@ const delButtonStyle: React.CSSProperties = {
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
-    fontSize: "20px",
+    fontSize: "26pt",
+    lineHeight: '0px',
     cursor: "pointer",
     borderRadius: "2px",
 }

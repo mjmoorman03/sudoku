@@ -42,13 +42,19 @@ export default function SudokuInterface() {
     const [checkStatus, setCheckStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
     const [visible, setVisible] = useState(false);
     const [focusedCell, setFocusedCell] = useState<[number, number] | null>(null);
-    const [zoomLevel, setZoomLevel] = useState(1.0);
     const [panelStatus, setPanelStatus] = useState<'annotations' | 'ordinary' | 'colors'>('ordinary');
     const [gridObj, setGridObj] = useState<GridObject>({'grid': initialGrid, 'default': initialGrid, 'color': initialGrid, 'annotations': annotationsGrid, 'solution': initialGrid});
     const [isComplete, setIsComplete] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [zoomLevel, setZoomLevel] = useState(1);
 
     const { width, height } = useWindowDimensions();
+    // set zoomlevel to 1.0 if width > 600 else 0.7
+
+    useEffect(() => {
+        const initialZoom = window.innerWidth < 650 ? 0.7 : 1;
+        setZoomLevel(initialZoom);
+    }, []);
     
 
     useEffect(() => {
@@ -108,7 +114,7 @@ export default function SudokuInterface() {
             // don't allow changes to default grid cells
             return;
         }
-        // 
+        // alert(zoomLevel);
         if (panelStatus === 'annotations') {
             if (value === '' && gridObj.annotations[row][col].length === 0) {
                 setGridObj((prevGrid: GridObject) => {
@@ -272,7 +278,7 @@ export default function SudokuInterface() {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+        <div className='flex flex-col md:flex-row' style={{ alignItems: 'center', justifyContent: 'center'}}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", width: "100%" }}>
                     <Button label="Easy" onClick={handleNewPuzzle} />
