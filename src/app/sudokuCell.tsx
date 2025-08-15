@@ -39,7 +39,7 @@ export default function SudokuCell({
         pointerEvents: 'none',
         lineHeight: '0px',
         fontSize: `${10 * zoomLevel}px`,
-        color: 'gray',
+        color: 'black',
         userSelect: 'none',
     };
 

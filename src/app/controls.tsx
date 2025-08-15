@@ -36,13 +36,18 @@ export default function Controls({ focusedCell, handleCellChange, panelStatus, c
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: 'white', border: '2px solid #000000ff', borderRadius: '12px', padding: '5px', margin: '30px'}}>
             <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
-                <Button label="Annotations" onClick={() => changePanel('annotations')} style={panelStatus === 'annotations' ? activeControlButtonStyle : controlButtonStyle} />
-                <Button label="Ordinary" onClick={() => changePanel('ordinary')} style={panelStatus === 'ordinary' ? activeControlButtonStyle : controlButtonStyle} />
-                <Button label="Colors" onClick={() => changePanel('colors')} style={panelStatus === 'colors' ? activeControlButtonStyle : controlButtonStyle} />
+                <Button label={String.fromCharCode(0x2151)} onClick={() => changePanel('annotations')} style={panelStatus === 'annotations' ? activeControlButtonStyle : controlButtonStyle} />
+                <Button label='1' onClick={() => changePanel('ordinary')} style={panelStatus === 'ordinary' ? activeControlButtonStyle : controlButtonStyle} />
+                <Button label={String.fromCharCode(0xD83C, 0xDF08)} onClick={() => changePanel('colors')} style={panelStatus === 'colors' ? activeControlButtonStyle : controlButtonStyle} />
             </div>
-            <TrioLayout>
-                {panelStatus === 'annotations' ? numberButtons : panelStatus === 'ordinary' ? numberButtons : colorButtons}
-            </TrioLayout>
+            <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+                <TrioLayout>
+                    {panelStatus === 'annotations' ? numberButtons : panelStatus === 'ordinary' ? numberButtons : colorButtons}
+                </TrioLayout>
+                <div style={{ display: 'flex', alignItems: 'center', marginLeft: '10px' }}>
+                    <Button label={`\u232B`} onClick={() => (focusedCell) ? handleCellChange(focusedCell[0], focusedCell[1], '') : null} style={delButtonStyle}/>
+                </div>
+            </div>
         </div>
     )
 }
@@ -87,3 +92,16 @@ const numberButtonStyle: React.CSSProperties = {
     borderRadius: "0px",
     transition: "background-color 0.3s, border-color 0.3s",
 };
+
+const delButtonStyle: React.CSSProperties = {
+    width: '70px',
+    height: '30px',
+    backgroundColor: "#444444ff",
+    border: "2px solid #aaaaaaff",
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+    fontSize: "20px",
+    cursor: "pointer",
+    borderRadius: "2px",
+}

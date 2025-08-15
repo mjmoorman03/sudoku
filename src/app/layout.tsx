@@ -27,7 +27,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <a href="https://www.flaticon.com/free-icons/sudoku" title="sudoku icons" hidden={true}>Sudoku icons created by Freepik - Flaticon</a>
         {children}
       </body>
     </html>

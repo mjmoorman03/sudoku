@@ -9,6 +9,8 @@ import easyPuzzles from '../data/easyPuzzles.json';
 import mediumPuzzles from '../data/mediumPuzzles.json';
 import hardPuzzles from '../data/hardPuzzles.json';
 import { GridObject } from "./interfaces";
+import Confetti from "react-confetti";
+import useWindowDimensions from "./useWindowDims"
 
 
 const initialGrid = [
@@ -42,30 +44,51 @@ export default function SudokuInterface() {
     const [focusedCell, setFocusedCell] = useState<[number, number] | null>(null);
     const [zoomLevel, setZoomLevel] = useState(1.0);
     const [panelStatus, setPanelStatus] = useState<'annotations' | 'ordinary' | 'colors'>('ordinary');
-    // TODO: Add annotations
-    const [gridObj, setGridObj] = useState<GridObject>({'grid': initialGrid, 'default': initialGrid, 'color': initialGrid, 'annotations': annotationsGrid});
+    const [gridObj, setGridObj] = useState<GridObject>({'grid': initialGrid, 'default': initialGrid, 'color': initialGrid, 'annotations': annotationsGrid, 'solution': initialGrid});
+    const [isComplete, setIsComplete] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
+    const { width, height } = useWindowDimensions();
+    
 
     useEffect(() => {
         if (checkStatus === 'unchecked') {
-            setVisible(false);
+            const t = requestAnimationFrame(() => setVisible(false));
             return;
         }
         // reset to hidden, then show on the next frame so transition runs
         setVisible(false);
         const t = requestAnimationFrame(() => setVisible(true));
-        return () => cancelAnimationFrame(t);
+        // hide again after 3 seconds
+        const hideTimeout = setTimeout(() => {
+            setCheckStatus('unchecked');
+        }, 3000);
+        return (() => {
+            cancelAnimationFrame(t);
+            clearTimeout(hideTimeout);
+        });
     }, [checkStatus]);
+
+    useEffect(() => {
+        // reset zoom level when panel changes
+        if (isGridComplete(gridObj.grid, gridObj.solution)) {
+            setIsComplete(true);
+            setShowConfetti(true);
+            setTimeout(() => {
+                setShowConfetti(false)
+            }, 8000);
+        } 
+    }, [gridObj.grid, gridObj.solution]);
 
     function handleCellChange(row: number, col: number, value: string) {
         // set new color grid value
-        if (panelStatus === 'colors' && ['Khaki', 'DarkSeaGreen', 'LightSkyBlue', 'PeachPuff', 'Plum', 'LightGreen', 'LightSalmon', 'LightSteelBlue', 'LightCoral'].includes(value)) {
+        if (panelStatus === 'colors' && ['Khaki', 'DarkSeaGreen', 'LightSkyBlue', 'PeachPuff', 'Plum', 'LightGreen', 'LightSalmon', 'LightSteelBlue', 'LightCoral', ''].includes(value)) {
             setGridObj((prevGrid: GridObject) => {
                 const newColorGird = prevGrid.color.map((r: string[], i: number) => {
                     if (i === row) {
                         return r.map((v: string, j: number) => {
                             if (j === col) {
-                                if (v === value) {
+                                if (v === value || value === '') {
                                     return ''; // toggle off
                                 }
                                 return value; // set to new color
@@ -85,6 +108,7 @@ export default function SudokuInterface() {
             // don't allow changes to default grid cells
             return;
         }
+        // 
         if (panelStatus === 'annotations') {
             if (value === '' && gridObj.annotations[row][col].length === 0) {
                 setGridObj((prevGrid: GridObject) => {
@@ -100,6 +124,13 @@ export default function SudokuInterface() {
             }
             // toggle annotation
             setGridObj((prevGrid: GridObject) => {
+                if (value === '') {
+                    // remove annotation
+                    const newAnnotations = prevGrid.annotations.map((r: string[][], i: number) => (
+                        i === row ? r.map((v, j) => (j === col ? [] : v)) : r
+                    ));
+                    return {...gridObj, 'annotations': newAnnotations};
+                }
                 const newAnnotations = prevGrid.annotations.map((r: string[][], i: number) => {
                     if (i === row) {
                         return r.map((v, j) => {
@@ -121,10 +152,22 @@ export default function SudokuInterface() {
             });
             return;
         }
-        // if grid value put in, clear annotations of that cell
-        const newGrid = gridObj.grid.map((r: string[], i: number) => (
-            i === row ? r.map((v, j) => (j === col ? value : v)) : r
-        ));
+        const newGrid = gridObj.grid.map((r: string[], i: number) => {
+            if (i === row) {
+                return r.map((v: string, j: number) => {
+                    if (j === col) {
+                        if (v === value) {
+                            return ''; // toggle off
+                        }
+                        return value; // set to new value
+                    } else {
+                        return v;
+                    }
+                });
+            } else {
+                return r; 
+            }
+        });
         // clear annotations for that cell
         const newAnnotations = gridObj.annotations.map((r: string[][], i: number) => (
             i === row ? r.map((v, j) => (j === col ? [] : v)) : r
@@ -167,42 +210,13 @@ export default function SudokuInterface() {
     }
 
     function handleCheckGrid() {
-        // check rows
+        // check grid to solution
         for (let i = 0; i < 9; i++) {
-            const seen = new Set<string>();
             for (let j = 0; j < 9; j++) {
-                const val = gridObj.grid[i][j];
-                if (val === '' || seen.has(val)) {
-                    setCheckStatus('invalid');
-                    return;
-                }
-                seen.add(val);
-            }
-        }
-        // check columns
-        for (let j = 0; j < 9; j++) {
-            const seen = new Set<string>();
-            for (let i = 0; i < 9; i++) {
-                const val = gridObj.grid[i][j];
-                if (val === '' || seen.has(val)) {
-                    setCheckStatus('invalid');
-                    return;
-                }
-                seen.add(val);
-            }
-        }
-        // check 3x3 boxes
-        for (let boxRow = 0; boxRow < 3; boxRow++) {
-            for (let boxCol = 0; boxCol < 3; boxCol++) {
-                const seen = new Set<string>();
-                for (let i = 0; i < 3; i++) {
-                    for (let j = 0; j < 3; j++) {
-                        const val = gridObj.grid[3 * boxRow + i][3 * boxCol + j];
-                        if (val === '' || seen.has(val)) {
-                            setCheckStatus('invalid');
-                            return;
-                        }
-                        seen.add(val);
+                if (gridObj.grid[i][j] !== '') {
+                    if (gridObj.grid[i][j] !== gridObj.solution[i][j]) {
+                        setCheckStatus('invalid');
+                        return;
                     }
                 }
             }
@@ -210,6 +224,20 @@ export default function SudokuInterface() {
         setCheckStatus('valid');
     }
 
+    function isGridComplete(grid : string[][], sol : string[][]) {
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (grid[i][j] !== sol[i][j]) {
+                    return false;
+                }
+            }
+        }
+        if (grid[0][0] === '') {
+            return false; // to prevent first mount
+        }
+        return true;
+    }
+                    
     function handleNewPuzzle(e: React.MouseEvent<HTMLButtonElement>) {
         const difficulty = e.currentTarget?.textContent?.toLowerCase();
         const puzzles = 
@@ -229,16 +257,22 @@ export default function SudokuInterface() {
                 newGrid[i][j] = val === '0' ? '' : val;
             }
         }
-        setGridObj({'grid': newGrid, 'default': newGrid, 'color': initialGrid, 'annotations': annotationsGrid});
+        const solution : string[][] = [];
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                const val = randomPuzzle['solution'][i * 9 + j];
+                if (solution[i] === undefined) {
+                    solution[i] = [];
+                }
+                solution[i][j] = val === '0' ? '' : val;
+            }
+        }
+        setGridObj({'grid': newGrid, 'default': newGrid, 'color': initialGrid, 'annotations': annotationsGrid, 'solution': solution});
         setCheckStatus('unchecked');
     }
 
     return (
         <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-            {checkStatus !== 'unchecked' && 
-            <h3 style={checkStatus === 'valid' ? {...statusValidStyle, opacity: visible ? 1 : 0} : {...statusInvalidStyle, opacity: visible ? 1 : 0}}>
-                {checkStatus === 'invalid' ? 'There are errors in your solution.' : 'Congratulations! You solved the puzzle!'}
-            </h3>}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div style={{ display: "flex", flexDirection: "row", justifyContent: "center", width: "100%" }}>
                     <Button label="Easy" onClick={handleNewPuzzle} />
@@ -263,8 +297,17 @@ export default function SudokuInterface() {
                     <div />
                 </div>
                 <Button label="Check Solution" onClick={handleCheckGrid} />
+                {checkStatus !== 'unchecked' && 
+                <h3 style={checkStatus === 'valid' ? {...statusValidStyle, opacity: visible ? 1 : 0} : {...statusInvalidStyle, opacity: visible ? 1 : 0}}>
+                {checkStatus === 'invalid' ? 'There are errors in your solution.' : (isComplete ? 'Congratulations! You solved the puzzle!' : "No errors found! Keep it up!")}
+                </h3>}
             </div>
             <Controls focusedCell={focusedCell} handleCellChange={handleCellChange} panelStatus={panelStatus} changePanel={setPanelStatus}/>
+            {showConfetti && <Confetti
+                width={width}
+                height={height}
+                numberOfPieces={200} 
+                />}
         </div>
     )
 }

@@ -2,9 +2,11 @@
 
 export default function Button({ label, onClick, style=buttonStyle }: { label: string; onClick:(e: React.MouseEvent<HTMLButtonElement>) => void, style?: React.CSSProperties }) {
     return (
-        <button style={style} onClick={onClick}>
-            {label}
-        </button>
+        <div>
+            <button style={style} onClick={onClick}>
+                {label}
+            </button>
+        </div>
     );
 }
 
