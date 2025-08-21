@@ -2,7 +2,6 @@ import SudokuInterface from "./sudokuInterface";
 import { Footer, FooterCopyright } from "flowbite-react";
 
 
-
 export default function Home() {
 
   return (
@@ -17,5 +16,3 @@ export default function Home() {
     </>
   )
 }
-
-// need to lift state up to implement checker
