@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import SudokuGrid from "./sudokuGrid";
 import Button from "./button";
 import ZoomButton from "./zoomButton";
@@ -50,6 +50,16 @@ export default function SudokuInterface() {
 
     const { width, height } = useWindowDimensions();
     // set zoomlevel to 1.0 if width > 600 else 0.7
+
+    const numCounts = useMemo(() => {
+        return gridObj.grid.reduce((acc, arr) => {
+            const tmpCounts = arr.reduce((tmpAcc, num) => {
+                tmpAcc[num] = tmpAcc[num] + 1;
+                return tmpAcc;
+            }, acc)
+            return tmpCounts
+        }, {'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,'8':0,'9':0} as Record<string,number>)
+    }, [gridObj.grid])
 
     useEffect(() => {
         const initialZoom = window.innerWidth < 650 ? 0.7 : 1;
@@ -114,7 +124,6 @@ export default function SudokuInterface() {
             // don't allow changes to default grid cells
             return;
         }
-        // alert(zoomLevel);
         if (panelStatus === 'annotations') {
             if (value === '' && gridObj.annotations[row][col].length === 0) {
                 setGridObj((prevGrid: GridObject) => {
@@ -308,7 +317,7 @@ export default function SudokuInterface() {
                 {checkStatus === 'invalid' ? 'There are errors in your solution.' : (isComplete ? 'Congratulations! You solved the puzzle!' : "No errors found! Keep it up!")}
                 </h3>}
             </div>
-            <Controls focusedCell={focusedCell} handleCellChange={handleCellChange} panelStatus={panelStatus} changePanel={setPanelStatus}/>
+            <Controls focusedCell={focusedCell} handleCellChange={handleCellChange} panelStatus={panelStatus} changePanel={setPanelStatus} numCounts={numCounts}/>
             {showConfetti && <Confetti
                 width={width}
                 height={height}

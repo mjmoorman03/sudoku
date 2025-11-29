@@ -2,7 +2,8 @@ import Button from "./button";
 import TrioLayout from "./trioLayout";
 
 
-export default function Controls({ focusedCell, handleCellChange, panelStatus, changePanel }: { focusedCell?: [number, number] | null, handleCellChange: (row: number, col: number, value: string) => void, panelStatus: 'annotations' | 'ordinary' | 'colors', changePanel: (panel: 'annotations' | 'ordinary' | 'colors') => void }) {
+export default function Controls(
+    { focusedCell, handleCellChange, panelStatus, changePanel, numCounts }: { focusedCell?: [number, number] | null, handleCellChange: (row: number, col: number, value: string) => void, panelStatus: 'annotations' | 'ordinary' | 'colors', changePanel: (panel: 'annotations' | 'ordinary' | 'colors') => void, numCounts: Record<string,number> }) {
 
     const numberButtons = [];
     for (let i = 1; i <= 9; i++) {
@@ -15,7 +16,7 @@ export default function Controls({ focusedCell, handleCellChange, panelStatus, c
                         handleCellChange(focusedCell[0], focusedCell[1], i.toString());
                     }
                 }}
-                style={numberButtonStyle}
+                style={numCounts[i.toString()] < 9 ? numberButtonStyle: {...numberButtonStyle, color: "black"}}
             />
         );
     }
