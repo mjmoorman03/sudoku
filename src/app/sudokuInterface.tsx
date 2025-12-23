@@ -11,6 +11,8 @@ import hardPuzzles from "../data/hardPuzzles.json";
 import { GridObject } from "./interfaces";
 import Confetti from "react-confetti";
 import useWindowDimensions from "./useWindowDims";
+import { Box } from "@mui/material";
+import { useTimer } from "./hooks/timer";
 
 const initialGrid = [
   ["", "", "", "", "", "", "", "", ""],
@@ -58,6 +60,8 @@ export default function SudokuInterface() {
 
   const { width, height } = useWindowDimensions();
   // set zoomlevel to 1.0 if width > 600 else 0.7
+
+  const { timerComp, resetTimer, pauseTimer } = useTimer();
 
   const numCounts = useMemo(() => {
     return gridObj.grid.reduce(
@@ -110,11 +114,12 @@ export default function SudokuInterface() {
     if (isGridComplete(gridObj.grid, gridObj.solution)) {
       setIsComplete(true);
       setShowConfetti(true);
+      pauseTimer();
       setTimeout(() => {
         setShowConfetti(false);
       }, 8000);
     }
-  }, [gridObj.grid, gridObj.solution]);
+  }, [gridObj.grid, gridObj.solution, pauseTimer]);
 
   function handleCellChange(row: number, col: number, value: string) {
     // set new color grid value
@@ -228,11 +233,11 @@ export default function SudokuInterface() {
   }
 
   function handleZoomIn() {
-    setZoomLevel((zl) => Math.min(3.0, zl + 0.1));
+    setZoomLevel((zl: number) => Math.min(3.0, zl + 0.1));
   }
 
   function handleZoomOut() {
-    setZoomLevel((zl) => Math.max(0.5, zl - 0.1));
+    setZoomLevel((zl: number) => Math.max(0.5, zl - 0.1));
   }
 
   function handleArrowKey(row: number, col: number, direction: string) {
@@ -330,6 +335,7 @@ export default function SudokuInterface() {
       solution: solution,
     });
     setCheckStatus("unchecked");
+    resetTimer();
   }
 
   return (
@@ -404,13 +410,16 @@ export default function SudokuInterface() {
           </h3>
         )}
       </div>
-      <Controls
-        focusedCell={focusedCell}
-        handleCellChange={handleCellChange}
-        panelStatus={panelStatus}
-        changePanel={setPanelStatus}
-        numCounts={numCounts}
-      />
+      <Box display="flex" flexDirection="column" alignItems="center">
+        {timerComp}
+        <Controls
+          focusedCell={focusedCell}
+          handleCellChange={handleCellChange}
+          panelStatus={panelStatus}
+          changePanel={setPanelStatus}
+          numCounts={numCounts}
+        />
+      </Box>
       {showConfetti && (
         <Confetti width={width} height={height} numberOfPieces={200} />
       )}
