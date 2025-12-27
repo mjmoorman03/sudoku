@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import SudokuGrid from "./sudokuGrid";
 import Button from "./button";
 import ZoomButton from "./zoomButton";
@@ -93,7 +93,7 @@ export default function SudokuInterface() {
 
   useEffect(() => {
     if (checkStatus === "unchecked") {
-      const t = requestAnimationFrame(() => setVisible(false));
+      void requestAnimationFrame(() => setVisible(false));
       return;
     }
     // reset to hidden, then show on the next frame so transition runs
@@ -109,93 +109,47 @@ export default function SudokuInterface() {
     };
   }, [checkStatus]);
 
-  useEffect(() => {
-    // reset zoom level when panel changes
-    if (isGridComplete(gridObj.grid, gridObj.solution)) {
-      setIsComplete(true);
-      setShowConfetti(true);
-      pauseTimer();
-      setTimeout(() => {
-        setShowConfetti(false);
-      }, 8000);
-    }
-  }, [gridObj.grid, gridObj.solution, pauseTimer]);
-
-  function handleCellChange(row: number, col: number, value: string) {
-    // set new color grid value
-    if (
-      panelStatus === "colors" &&
-      [
-        "Khaki",
-        "DarkSeaGreen",
-        "LightSkyBlue",
-        "PeachPuff",
-        "Plum",
-        "LightGreen",
-        "LightSalmon",
-        "LightSteelBlue",
-        "LightCoral",
-        "",
-      ].includes(value)
-    ) {
-      setGridObj((prevGrid: GridObject) => {
-        const newColorGird = prevGrid.color.map((r: string[], i: number) => {
-          if (i === row) {
-            return r.map((v: string, j: number) => {
-              if (j === col) {
-                if (v === value || value === "") {
-                  return ""; // toggle off
-                }
-                return value; // set to new color
-              } else {
-                return v;
-              }
-            });
-          } else {
-            return r;
-          }
-        });
-        return { ...gridObj, color: newColorGird };
-      });
-      return;
-    }
-    if (gridObj.default[row][col] !== "") {
-      // don't allow changes to default grid cells
-      return;
-    }
-    if (panelStatus === "annotations") {
-      if (value === "" && gridObj.annotations[row][col].length === 0) {
-        setGridObj((prevGrid: GridObject) => {
-          const newGrid = prevGrid.grid.map((r: string[], i: number) =>
-            i === row ? r.map((v, j) => (j === col ? "" : v)) : r
-          );
-          return { ...gridObj, grid: newGrid };
-        });
-        return;
-      }
-      if (gridObj.grid[row][col] !== "") {
-        return;
-      }
-      // toggle annotation
-      setGridObj((prevGrid: GridObject) => {
-        if (value === "") {
-          // remove annotation
-          const newAnnotations = prevGrid.annotations.map(
-            (r: string[][], i: number) =>
-              i === row ? r.map((v, j) => (j === col ? [] : v)) : r
-          );
-          return { ...gridObj, annotations: newAnnotations };
+  const isGridComplete = useCallback((grid: string[][], sol: string[][]) => {
+    for (let i = 0; i < 9; i++) {
+      for (let j = 0; j < 9; j++) {
+        if (grid[i][j] !== sol[i][j]) {
+          return false;
         }
-        const newAnnotations = prevGrid.annotations.map(
-          (r: string[][], i: number) => {
+      }
+    }
+    if (grid[0][0] === "") {
+      return false; // to prevent first mount
+    }
+    return true;
+  }, []);
+
+  const handleCellChange = useCallback(
+    (row: number, col: number, value: string) => {
+      // set new color grid value
+      if (
+        panelStatus === "colors" &&
+        [
+          "Khaki",
+          "DarkSeaGreen",
+          "LightSkyBlue",
+          "PeachPuff",
+          "Plum",
+          "LightGreen",
+          "LightSalmon",
+          "LightSteelBlue",
+          "LightCoral",
+          "",
+        ].includes(value)
+      ) {
+        setGridObj((prevGrid: GridObject) => {
+          const newColorGird = prevGrid.color.map((r: string[], i: number) => {
             if (i === row) {
-              return r.map((v, j) => {
+              return r.map((v: string, j: number) => {
                 if (j === col) {
-                  if (v.includes(value)) {
-                    return v.filter((ann) => ann !== value); // remove annotation
-                  } else {
-                    return [...v, value]; // add annotation
+                  if (v === value || value === "") {
+                    return ""; // toggle off
                   }
+                  return value; // set to new color
                 } else {
                   return v;
                 }
@@ -203,70 +157,127 @@ export default function SudokuInterface() {
             } else {
               return r;
             }
-          }
-        );
-        return { ...gridObj, annotations: newAnnotations };
-      });
-      return;
-    }
-    const newGrid = gridObj.grid.map((r: string[], i: number) => {
-      if (i === row) {
-        return r.map((v: string, j: number) => {
-          if (j === col) {
-            if (v === value) {
-              return ""; // toggle off
-            }
-            return value; // set to new value
-          } else {
-            return v;
-          }
+          });
+          return { ...gridObj, color: newColorGird };
         });
-      } else {
-        return r;
+        return;
       }
-    });
-    // clear annotations for that cell
-    const newAnnotations = gridObj.annotations.map((r: string[][], i: number) =>
-      i === row ? r.map((v, j) => (j === col ? [] : v)) : r
-    );
-    setGridObj({ ...gridObj, grid: newGrid, annotations: newAnnotations });
-  }
+      if (gridObj.default[row][col] !== "") {
+        // don't allow changes to default grid cells
+        return;
+      }
+      if (panelStatus === "annotations") {
+        if (value === "" && gridObj.annotations[row][col].length === 0) {
+          setGridObj((prevGrid: GridObject) => {
+            const newGrid = prevGrid.grid.map((r: string[], i: number) =>
+              i === row ? r.map((v, j) => (j === col ? "" : v)) : r
+            );
+            return { ...gridObj, grid: newGrid };
+          });
+          return;
+        }
+        if (gridObj.grid[row][col] !== "") {
+          return;
+        }
+        // toggle annotation
+        setGridObj((prevGrid: GridObject) => {
+          if (value === "") {
+            // remove annotation
+            const newAnnotations = prevGrid.annotations.map(
+              (r: string[][], i: number) =>
+                i === row ? r.map((v, j) => (j === col ? [] : v)) : r
+            );
+            return { ...gridObj, annotations: newAnnotations };
+          }
+          const newAnnotations = prevGrid.annotations.map(
+            (r: string[][], i: number) => {
+              if (i === row) {
+                return r.map((v, j) => {
+                  if (j === col) {
+                    if (v.includes(value)) {
+                      return v.filter((ann) => ann !== value); // remove annotation
+                    } else {
+                      return [...v, value]; // add annotation
+                    }
+                  } else {
+                    return v;
+                  }
+                });
+              } else {
+                return r;
+              }
+            }
+          );
+          return { ...gridObj, annotations: newAnnotations };
+        });
+        return;
+      }
+      const newGrid = gridObj.grid.map((r: string[], i: number) => {
+        if (i === row) {
+          return r.map((v: string, j: number) => {
+            if (j === col) {
+              if (v === value) {
+                return ""; // toggle off
+              }
+              return value; // set to new value
+            } else {
+              return v;
+            }
+          });
+        } else {
+          return r;
+        }
+      });
+      // clear annotations for that cell
+      const newAnnotations = gridObj.annotations.map(
+        (r: string[][], i: number) =>
+          i === row ? r.map((v, j) => (j === col ? [] : v)) : r
+      );
+      setGridObj({ ...gridObj, grid: newGrid, annotations: newAnnotations });
+      if (isGridComplete(newGrid, gridObj.solution)) {
+        setIsComplete(true);
+        setShowConfetti(true);
+        pauseTimer();
+        setTimeout(() => {
+          setShowConfetti(false);
+        }, 8000);
+      }
+    },
+    [gridObj, panelStatus, pauseTimer, isGridComplete]
+  );
 
-  function handleZoomIn() {
+  const handleZoomIn = useCallback(() => {
     setZoomLevel((zl: number) => Math.min(3.0, zl + 0.1));
-  }
+  }, []);
 
-  function handleZoomOut() {
+  const handleZoomOut = useCallback(() => {
     setZoomLevel((zl: number) => Math.max(0.5, zl - 0.1));
-  }
+  }, []);
 
-  function handleArrowKey(row: number, col: number, direction: string) {
-    let newRow = row;
-    let newCol = col;
+  const handleArrowKey = useCallback(
+    (row: number, col: number, direction: string) => {
+      let newRow = row;
+      let newCol = col;
+      switch (direction) {
+        case "ArrowUp":
+          newRow = Math.max(0, row - 1);
+          break;
+        case "ArrowDown":
+          newRow = Math.min(8, row + 1);
+          break;
+        case "ArrowLeft":
+          newCol = Math.max(0, col - 1);
+          break;
+        case "ArrowRight":
+          newCol = Math.min(8, col + 1);
+          break;
+      }
+      setFocusedCell([newRow, newCol]);
+    },
+    []
+  );
 
-    switch (direction) {
-      case "ArrowUp":
-        newRow = Math.max(0, row - 1);
-        break;
-      case "ArrowDown":
-        newRow = Math.min(8, row + 1);
-        break;
-      case "ArrowLeft":
-        newCol = Math.max(0, col - 1);
-        break;
-      case "ArrowRight":
-        newCol = Math.min(8, col + 1);
-        break;
-    }
-
-    setFocusedCell([newRow, newCol]);
-  }
-
-  function handleCellFocus(row: number, col: number) {
-    setFocusedCell([row, col]);
-  }
-
-  function handleCheckGrid() {
+  const handleCheckGrid = useCallback(() => {
     // check grid to solution
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
@@ -279,64 +290,53 @@ export default function SudokuInterface() {
       }
     }
     setCheckStatus("valid");
-  }
+  }, [gridObj.grid, gridObj.solution]);
 
-  function isGridComplete(grid: string[][], sol: string[][]) {
-    for (let i = 0; i < 9; i++) {
-      for (let j = 0; j < 9; j++) {
-        if (grid[i][j] !== sol[i][j]) {
-          return false;
+  const handleNewPuzzle = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const difficulty = e.currentTarget?.textContent?.toLowerCase();
+      const puzzles =
+        difficulty === "easy"
+          ? easyPuzzles
+          : difficulty === "medium"
+          ? mediumPuzzles
+          : difficulty === "hard"
+          ? hardPuzzles
+          : easyPuzzles;
+      const randomPuzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
+      // convert to 2D array
+      const newGrid: string[][] = [];
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          const val = randomPuzzle["puzzle"][i * 9 + j];
+          if (newGrid[i] === undefined) {
+            newGrid[i] = [];
+          }
+          newGrid[i][j] = val === "0" ? "" : val;
         }
       }
-    }
-    if (grid[0][0] === "") {
-      return false; // to prevent first mount
-    }
-    return true;
-  }
-
-  function handleNewPuzzle(e: React.MouseEvent<HTMLButtonElement>) {
-    const difficulty = e.currentTarget?.textContent?.toLowerCase();
-    const puzzles =
-      difficulty === "easy"
-        ? easyPuzzles
-        : difficulty === "medium"
-        ? mediumPuzzles
-        : difficulty === "hard"
-        ? hardPuzzles
-        : easyPuzzles;
-    const randomPuzzle = puzzles[Math.floor(Math.random() * puzzles.length)];
-    // convert to 2D array
-    const newGrid: string[][] = [];
-    for (let i = 0; i < 9; i++) {
-      for (let j = 0; j < 9; j++) {
-        const val = randomPuzzle["puzzle"][i * 9 + j];
-        if (newGrid[i] === undefined) {
-          newGrid[i] = [];
+      const solution: string[][] = [];
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          const val = randomPuzzle["solution"][i * 9 + j];
+          if (solution[i] === undefined) {
+            solution[i] = [];
+          }
+          solution[i][j] = val === "0" ? "" : val;
         }
-        newGrid[i][j] = val === "0" ? "" : val;
       }
-    }
-    const solution: string[][] = [];
-    for (let i = 0; i < 9; i++) {
-      for (let j = 0; j < 9; j++) {
-        const val = randomPuzzle["solution"][i * 9 + j];
-        if (solution[i] === undefined) {
-          solution[i] = [];
-        }
-        solution[i][j] = val === "0" ? "" : val;
-      }
-    }
-    setGridObj({
-      grid: newGrid,
-      default: newGrid,
-      color: initialGrid,
-      annotations: annotationsGrid,
-      solution: solution,
-    });
-    setCheckStatus("unchecked");
-    resetTimer();
-  }
+      setGridObj({
+        grid: newGrid,
+        default: newGrid,
+        color: initialGrid,
+        annotations: annotationsGrid,
+        solution: solution,
+      });
+      setCheckStatus("unchecked");
+      resetTimer();
+    },
+    [resetTimer]
+  );
 
   return (
     <div
@@ -386,7 +386,7 @@ export default function SudokuInterface() {
               gridObj={gridObj}
               handleCellChange={handleCellChange}
               handleArrowKey={handleArrowKey}
-              handleCellFocus={handleCellFocus}
+              handleCellFocus={(row, col) => setFocusedCell([row, col])}
               focusedCell={focusedCell}
               zoomLevel={zoomLevel}
             />
