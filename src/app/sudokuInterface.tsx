@@ -14,7 +14,7 @@ import useWindowDimensions from "./useWindowDims";
 import { Box } from "@mui/material";
 import { useTimer } from "./hooks/timer";
 
-const initialGrid = [
+const initialGrid: string[][] = [
   ["", "", "", "", "", "", "", "", ""],
   ["", "", "", "", "", "", "", "", ""],
   ["", "", "", "", "", "", "", "", ""],
